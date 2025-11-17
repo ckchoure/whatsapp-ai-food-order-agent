@@ -14,8 +14,7 @@ This project is an automated WhatsApp-based food ordering system built using n8n
 
 ## 📁 Files Included
 - `MyWorkflow.json` – Complete n8n workflow  
-- `/media/` – Workflow screenshots  
-- `/sheets/` – Sample Google Sheet data (Inventory, FAQ, Orders)  
+- `/media/` – Workflow screenshots   
 - `README.md` – Project documentation  
 
 ## 🛠 Tools Used
