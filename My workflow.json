@@ -1,0 +1,380 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "When a user sends their first message (like hi, hello), reply with:\n\"Welcome to Food Restaurant 🍽️\nHow can I help you today?\n\n🛒 Place an order\n\nℹ️ FAQ / Information\n\n📦 Check order / stock\"\n\n(👉 Keep the tone friendly like a food delivery app, not like a product e-commerce site)\n\nIf the user wants to place an order:\n\nAsk step by step: name, food item, quantity, Address \n\nCheck the Inventory sheet before confirming\n\nIf available →\n\nConfirm the order: \"Your order for [item] (x quantity) is confirmed ✅\"\n\nGenerate a unique Order ID (e.g., ID1234)\n\nInclude it in the reply: \"Your order ID is [Order ID]. You can use it to track your order.\"\n\nAdd to Orders sheet:\n\nStatus = Confirmed\n\nDescription = \"Order accepted (item available)\"\n\nOrder ID = generated ID\n\nIf not available →\n\n\"Sorry, [item] is out of stock ❌. Available options: [list items]\"\n\nAdd to Orders sheet:\n\nStatus = Rejected\n\nDescription = \"Order rejected (out of stock)\"\n\nOrder ID = generated ID\n\nOnly confirmed orders go into the Orders sheet\n\nIf the user wants FAQ:\n\nAnswer shortly and clearly (delivery time, payment method, restaurant hours)\n\nIf the user wants check order or check stock:\n\nAsk for food name or order ID\n\nLook up in Google Sheets (Orders / Inventory)\n\nIf checking order → reply with status (Confirmed / Rejected / Cancelled / Delivered)\n\nIf checking stock → reply with available quantity of that food\n\nAlso list all available food items with quantity if requested\n\nIf the user wants cancel order:\n\nReply politely:\n\"Sorry 🙏 I cannot cancel orders directly.\nPlease call the restaurant owner first and inform them.\nOwner Contact: +91 9301938638\"\n\nAlways reply in short text like a normal WhatsApp chat\n\nDo not use bold or long paragraphs\n\nUse stars only for highlighting words\n\nKeep tone friendly, polite, and food-delivery app style.    \n\nIf the customer writes in Hinglish, respond in the same style (Hinglish)."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        3920,
+        3104
+      ],
+      "id": "a986616e-2589-4be6-98c3-da9dbe4f15fd",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3728,
+        3328
+      ],
+      "id": "6aeb29a5-38dc-4acf-be69-31f80db17202",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1PSLRBJ5J7BlZGuU",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        3856,
+        3328
+      ],
+      "id": "ee38bd43-e3d8-4ea9-9f35-3316714ed519",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to answer frequently asked questions about the restaurant, delivery, payment methods, operating hours, and other general inquiries. This tool searches the FAQ database for relevant answers.",
+        "documentId": {
+          "__rl": true,
+          "value": "1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM",
+          "mode": "list",
+          "cachedResultName": "food delevery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 631234180,
+          "mode": "list",
+          "cachedResultName": "FAQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM/edit#gid=631234180"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        3984,
+        3328
+      ],
+      "id": "e17eb9b1-77d5-44c2-a346-7e60329ae0ce",
+      "name": "Get FAQ",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JIoPWqRnWAdbM0Om",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to add new orders to the Orders sheet. Provide customer name, food item, quantity, address, status, and order ID.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM",
+          "mode": "list",
+          "cachedResultName": "food delevery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1022135813,
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM/edit#gid=1022135813"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order Id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Order_Id', ``, 'string') }}",
+            "Customer Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Customer_Name', ``, 'string') }}",
+            "Address": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Address', ``, 'string') }}",
+            "Food Item": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Food_Item', ``, 'string') }}",
+            "Quantity Ordered": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity_Ordered', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}",
+            "Order Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Order_Date', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order Id",
+              "displayName": "Order Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Food Item",
+              "displayName": "Food Item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity Ordered",
+              "displayName": "Quantity Ordered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order Date",
+              "displayName": "Order Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4112,
+        3328
+      ],
+      "id": "f4590ccc-eed8-4e04-8c8b-fbc0468f9076",
+      "name": "Get Order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JIoPWqRnWAdbM0Om",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        3504,
+        3104
+      ],
+      "id": "50054542-7526-4490-a762-67cbd83d8a6f",
+      "name": "WhatsApp Trigger",
+      "webhookId": "06944ea3-9582-4de9-8540-50d9a71556b9",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "tUZv2qv70G5Ru7bj",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "835710812964621",
+        "recipientPhoneNumber": "+91 7509309433",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        4448,
+        3104
+      ],
+      "id": "d79b6d7b-eeb7-4b67-b332-1088e20205aa",
+      "name": "Send message",
+      "webhookId": "25c9fdba-dd7d-4439-8e63-5e02c3fd1632",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "xbuDZrcVSwZ3bjb4",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to check inventory stock levels and available food items. Returns all items with their quantities and availability status.",
+        "documentId": {
+          "__rl": true,
+          "value": "1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM",
+          "mode": "list",
+          "cachedResultName": "food delevery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 54021024,
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_Ptj5EOckdq1NLeaCZeNxZntkRzHgg-dtElV8wTjEQM/edit#gid=54021024"
+        },
+        "options": {}
+      },
+      "id": "86f43c24-b98f-4b04-8708-f796da041076",
+      "name": "Check Inventory",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4240,
+        3328
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JIoPWqRnWAdbM0Om",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get FAQ": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Order": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Inventory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4cda74b2-f5d2-4b89-bfb2-3477068fac9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "da132761e9b85e707e25f201202ab2b2334394b22fef86ce6204754fa80a7784"
+  },
+  "id": "8ptEJw45rVVpl88V",
+  "tags": []
+}
